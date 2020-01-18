@@ -3,7 +3,6 @@ package prometheus
 import (
 	"encoding/json"
 	"io/ioutil"
-	"os"
 )
 
 type Item struct {
@@ -15,13 +14,7 @@ type TargetFile struct {
 }
 
 func NewTargetFile(path string) *TargetFile {
-
-	dir, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
-	targetFile := &TargetFile{Path: dir + "/" + path}
+	targetFile := &TargetFile{Path: path}
 
 	return targetFile
 }
