@@ -16,11 +16,10 @@ VOLUME /prometheus-file-sd-updater-api
 
 FROM alpine
 
-ENV PORT 80
-ENV TOKEN test2
-
 RUN apk add docker
 
 COPY --from=builder /go/bin/prometheus-file-sd-updater-api /usr/bin/prometheus-file-sd-updater-api
 
-CMD prometheus-file-sd-updater-api /prometheus-file-sd-updater-api/targets.json ${TOKEN} --port ${PORT}
+EXPOSE 80
+
+CMD prometheus-file-sd-updater-api /prometheus-file-sd-updater-api/targets.json ${TOKEN} --port 80
