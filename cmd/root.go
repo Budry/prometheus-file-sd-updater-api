@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,10 +11,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type RequestBody struct {
+	Hostname string `json:"hostname"`
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "prometheus-file-sd-updater-api [path] [token]",
 	Short: "Add or remove hostname from Prometheus JSON file service discovery",
-	Args: cobra.ExactArgs(2),
+	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		requiredToken := args[1]
@@ -24,9 +29,14 @@ var rootCmd = &cobra.Command{
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
-			vars := mux.Vars(r)
+
+			requestBody, err := getRequestBody(r)
+			if err != nil {
+				return
+			}
+
 			targetFile := prometheus.NewTargetFile(args[0])
-			targetFile.Append(vars["hostname"])
+			targetFile.Append(requestBody.Hostname)
 			w.WriteHeader(http.StatusNoContent)
 
 		}).Methods("POST")
@@ -35,9 +45,14 @@ var rootCmd = &cobra.Command{
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
-			vars := mux.Vars(r)
+
+			requestBody, err := getRequestBody(r)
+			if err != nil {
+				return
+			}
+
 			targetFile := prometheus.NewTargetFile(args[0])
-			targetFile.Remove(vars["hostname"])
+			targetFile.Remove(requestBody.Hostname)
 			w.WriteHeader(http.StatusNoContent)
 		}).Methods("POST")
 
@@ -45,7 +60,10 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		http.ListenAndServe(":" + port, r)
+		err = http.ListenAndServe(":"+port, r)
+		if err != nil {
+			panic(err)
+		}
 	},
 }
 
@@ -57,6 +75,17 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func getRequestBody(r *http.Request) (*RequestBody, error) {
+	decoder := json.NewDecoder(r.Body)
+	requestBody := &RequestBody{}
+	if err := decoder.Decode(requestBody); err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	return requestBody, nil
 }
 
 func isAuthorized(requiredToken string, r *http.Request) bool {
