@@ -1,4 +1,4 @@
-FROM golang:alpine
+FROM golang:alpine as builder
 
 WORKDIR /go/src/app
 
@@ -11,7 +11,15 @@ COPY . .
 
 RUN go install -v ./...
 
-ENTRYPOINT ["prometheus-file-sd-updater-api"]
+VOLUME /prometheus-file-sd-updater-api
 
 
+FROM alpine
 
+ENV PORT 80
+
+RUN apk add docker
+
+COPY --from=builder /go/bin/prometheus-file-sd-updater-api /usr/bin/prometheus-file-sd-updater-api
+
+CMD ["prometheus-file-sd-updater-api", "/prometheus-file-sd-updater-api/targets.json", "test", "--port", "80"]
