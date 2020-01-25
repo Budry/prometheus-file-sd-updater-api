@@ -33,7 +33,7 @@ func (targetFile *TargetFile) Append(hostname string) {
 
 	if !contains(items[0].Targets, hostname) {
 		items[0].Targets = append(items[0].Targets, hostname)
-		newContent, _ := json.MarshalIndent(items, "", "   ")
+		newContent, _ := json.MarshalIndent(items, "", "  ")
 		err = ioutil.WriteFile(targetFile.Path, newContent, 0644)
 		if err != nil {
 			panic(err)
