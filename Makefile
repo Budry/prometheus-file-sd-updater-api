@@ -2,4 +2,5 @@ OUTPUT=prometheus-file-sd-updater-api
 
 all: build
 build:
-		go build -o dist/$(OUTPUT) -v
+		docker build -t budry/prometheus-file-sd-updater-api .
+		docker push budry/prometheus-file-sd-updater-api
